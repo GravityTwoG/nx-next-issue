@@ -1,0 +1,94 @@
+{
+  "name": "nx-test",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/nx-test",
+  "projectType": "application",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project nx-test --web",
+  "targets": {
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "root": "apps/nx-test",
+        "outputPath": "dist/apps/nx-test"
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "generateLockfile": true
+        }
+      },
+      "dependsOn": ["^build"]
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "nx-test:build",
+        "dev": true,
+        "serveTarget": "nx-test:serve"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "nx-test:build:development",
+          "dev": true,
+          "serveTarget": "nx-test:serve:development"
+        },
+        "production": {
+          "buildTarget": "nx-test:build:production",
+          "dev": false,
+          "customServerTarget": "nx-test:serve:production"
+        }
+      }
+    },
+    "export": {
+      "executor": "@nx/next:export",
+      "options": {
+        "buildTarget": "nx-test:build:production"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/nx-test/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/nx-test/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "container": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": ["build"],
+      "defaultConfiguration": "local",
+      "options": {
+        "engine": "docker",
+        "context": "dist/apps/nx-test",
+        "file": "apps/nx-test/Dockerfile"
+      },
+      "configurations": {
+        "local": {
+          "tags": ["nx-test:latest"],
+          "push": false
+        },
+        "production": {
+          "tags": ["ghcr.io/gravitytwog/nx-test:latest"],
+          "push": true
+        }
+      }
+    }
+  }
+}
